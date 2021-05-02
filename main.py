@@ -1,7 +1,6 @@
 import numpy as np
 from mendeleev import element
 from scipy.optimize import root_scalar
-from nist_data import prepare_levels
 import matplotlib.pyplot as plt
 
 
@@ -15,6 +14,7 @@ def calculate_pressure(element_name, tempreature, relative_density=1e-3):
     try:
         elem_data = np.load(path_to_data)
     except IOError:
+        from nist_data import prepare_levels
         prepare_levels(element_name)
         elem_data = np.load(path_to_data)
 
