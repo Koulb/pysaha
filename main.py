@@ -31,16 +31,19 @@ def calculate_pressure(elem_name, tempreature, relative_density=1e-3):
 
     T = tempreature / hartree
     j_max = Z
-    s_max = 5
 
-
+    # key = elem_name + '_' + str(j_max)
+    # energy_value = elem_data[key][1]
+    #
+    # print(energy_value)
+    # exit()
     def ionization_energy(j):
-        return elem.ionenergies.get(j+1)/ hartree
+        return elem.ionenergies.get(j)/ hartree
 
     # print(ionization_energy(1))
     # exit()
     def excited_energy(j, s):
-        key = elem_name + '_' + str(j+1)
+        key = elem_name + '_' + str(j)
         energy_value = elem_data[key][1][s]
         # if energy_value < ionization_energy(j):
         return energy_value / hartree
@@ -52,36 +55,41 @@ def calculate_pressure(elem_name, tempreature, relative_density=1e-3):
     # exit()
 
     def g(j, s):
-        key = elem_name + '_' + str(j+1)
-        energy_value = elem_data[key][0][s]
+        key = elem_name + '_' + str(j)
+        g_value = elem_data[key][0][s]
         # if energy_value < ionization_energy(j):
-        return energy_value / hartree
+        return g_value
         # else:
         #     raise ValueError('Energy is higher than Ionization energy')
 
 
     def statsum(j):
-        key = elem_name + '_' + str(j+1)
+        key = elem_name + '_' + str(j)
         s_max = len(elem_data[key][1])
-        sum = 0
+        sum = g(j, 0)
         temp = ionization_energy(j)
 
-        for s in range(s_max):
+        for s in range(1, s_max):
+            if ((ionization_energy(j)  - excited_energy(j, s)) <= T):
+                # print(s ,' is ionization barier')
+                break
+
             if (ionization_energy(j) <= excited_energy(j, s)): break
             temp2 = excited_energy(j, s)
-            sum += g(j, s) * np.exp(-(excited_energy(j, s) - (excited_energy(j, 0)) / T))
-            if ((ionization_energy(j)  - excited_energy(j, s)) <= T): break
+            sum += g(j, s) * np.exp(-(excited_energy(j, s) - excited_energy(j, 0)) / T)
 
         return sum
 
 
-    def phi(j):
+    def phi(j,Z_temp):
         factor = (2 / 3) * np.sqrt(2 / np.pi) * r0 ** 3 * T ** (3.0 / 2.0)
-        n_e = 3 * Z / (4 * np.pi * r0**3.0)
-        rD = np.sqrt(T /(n_e ))
-        dI = (Z - j) * e0 / rD
+        n_e = 3 * Z_temp / (4 * np.pi * r0**3.0)
+        rD = np.sqrt(T /n_e)
+        dI = j  / rD #(Z - j) ??
+        # print(dI)
 
         if (ionization_energy(j) - dI) / T >= 30:
+            print(j, 'is to high ')
             return 0.0
 
         result = (statsum(j + 1) / statsum(j)) * np.exp(- (ionization_energy(j) - dI) / T)
@@ -100,19 +108,24 @@ def calculate_pressure(elem_name, tempreature, relative_density=1e-3):
 
     def a(j, Z_temp):
         product = 1.0
-        for k in range(j):
-            product *= phi(k) / Z_temp
+        for k in range(1,j):
+            # print(k)
+            product *= phi(k,Z_temp) / Z_temp
             if product == 0.0:
+                print(k, ' is zero')
                 break
             #print(k, product)
         return product
 
     def Z0_resolve(Z_temp):
         sum1=0.0
-        sum2=0.0
-        for j in range(j_max):
+        sum2=1.0
+        for j in range(1, j_max+1):
+            # print(j)
             sum1 += j*a(j,Z_temp)
             sum2 += a(j,Z_temp)
+            # print(sum1,sum2)
+        # print('sum1/sum2 =', sum1/sum2)
         return  Z_temp - sum1/sum2
 
     # x = np.linspace(1, 13, 13)
@@ -137,7 +150,7 @@ def calculate_pressure(elem_name, tempreature, relative_density=1e-3):
         Z0 = root_scalar(
             f=Z0_resolve,
             method='brentq',
-            bracket=(1, 2*Z),
+            bracket=(0.1, 2*Z),
             rtol=1e-3
         ).root
         return Z0
@@ -146,13 +159,17 @@ def calculate_pressure(elem_name, tempreature, relative_density=1e-3):
     return  P
 
 elem_name = 'Al'
+
+# print(calculate_pressure(elem_name, 10))
+# exit()
+
 # T = [10,50, 100,500, 1000]
-NpointsT = 12
-T = 10 ** np.linspace(np.log10(10) , np.log10(1000), NpointsT)# log scale
+NpointsT = 15
+T = 10 ** np.linspace(np.log10(1) , np.log10(1000), NpointsT)# log scale
 
 P = np.array([calculate_pressure(elem_name, T_i)for T_i in T])
 
-plt.plot(T,P, 'x')
+plt.plot(T,P, '-x')
 plt.grid()
 plt.xscale('log')
 plt.show()
