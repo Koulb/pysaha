@@ -164,17 +164,20 @@ elem_name = 'Al'
 # exit()
 
 # T = [10,50, 100,500, 1000]
-NpointsT = 15
+NpointsT = 30
 T = 10 ** np.linspace(np.log10(1) , np.log10(1000), NpointsT)# log scale
 
 P = np.array([calculate_pressure(elem_name, T_i)for T_i in T])
 
+print("Plot is ready")
+print(P)
+
 plt.plot(T,P, '-x')
 plt.grid()
 plt.xscale('log')
+plt.savefig("saha.pdf")
 plt.show()
-print("Plot is ready")
-print(P)
+
 
 
 # print('rho/rho0 =', rho/elem.density)
