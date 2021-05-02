@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 
 def calculate_pressure(element_name, tempreature, relative_density=1e-3):
     elem = element(element_name)
-    rho = relative_density*elem.density  # 2.7 g/cm^3
-    mass = elem.atomic_weight  # 27 g/mol
-    Z = elem.atomic_number  # 13.0
+    rho = relative_density*elem.density
+    mass = elem.atomic_weight
+    Z = elem.atomic_number
 
     path_to_data = "test_files/nist_data" + "_" + element_name + ".npz"
     try:
