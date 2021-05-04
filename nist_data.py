@@ -16,7 +16,7 @@ def prepare_levels(name):
             value_level.append(df[i].get('level (eV)'))
 
         values = np.array([value_g, value_level])
-        ion_stage_name = name + '_' + str(number + 1)
+        ion_stage_name = name + '_' + str(number)
         data_dictionary[ion_stage_name] = values
 
     np.savez("test_files/nist_data" + "_" + name + ".npz", **data_dictionary)
